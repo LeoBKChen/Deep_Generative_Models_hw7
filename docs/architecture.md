@@ -10,9 +10,9 @@ TurtleCare AI 是 Deep Generative Models 期末作業的互動式生成式 AI Ap
 
 - 建立可本地執行的 Gradio App。
 - 使用 local Markdown knowledge base 與 TF-IDF RAG 提供 grounded responses。
-- 使用 OpenRouter / OpenAI-compatible LLM backend 產生 Q&A、診斷報告與設計 prompt。
+- 使用 multi-provider LLM backend 產生 Q&A、診斷報告與設計 prompt，預設順序為 OpenRouter -> OpenAI -> Google Gemini。
 - 使用 rule-based risk checker 提供穩定、安全的飼養風險訊號。
-- 預留 optional OpenRouter image generation，但 MVP 必須在 prompt-only mode 下完整可用。
+- 預留 optional multi-provider image generation，但 MVP 必須在 prompt-only mode 下完整可用。
 - README 與 workflow log 必須支援作業提交與 Agent-driven workflow 證明。
 
 ## 2. Assignment Mapping
@@ -20,9 +20,9 @@ TurtleCare AI 是 Deep Generative Models 期末作業的互動式生成式 AI Ap
 | Assignment Requirement | TurtleCare AI Implementation |
 | --- | --- |
 | Generative AI App | Gradio-based interactive turtle care assistant |
-| LLM | OpenRouter / OpenAI-compatible text generation for Q&A, reports, and prompts |
+| LLM | Multi-provider text generation through OpenRouter, OpenAI, and Google Gemini fallback |
 | RAG | Local Markdown knowledge base with TF-IDF retrieval |
-| Diffusion / Image Generation | Diffusion-ready tank design prompt generator and optional OpenRouter image generation |
+| Diffusion / Image Generation | Diffusion-ready tank design prompt generator and optional multi-provider image generation |
 | Interactive UI | Traditional Chinese Gradio interface |
 | Agent Workflow | `agent.md`, architecture docs, module specs, README, and workflow log |
 | Source Code | Python modules under `src/`, plus `app.py` |
@@ -40,7 +40,7 @@ MVP required:
 - Local Markdown knowledge base.
 - TF-IDF RAG with `top_k = 3`.
 - Rule-based turtle care risk checker.
-- OpenRouter / OpenAI-compatible LLM client.
+- Multi-provider LLM client with OpenRouter, OpenAI, and Google Gemini fallback.
 - Mock mode when no API key is available.
 - Traditional Chinese UI labels.
 - English README and workflow log.
@@ -48,7 +48,7 @@ MVP required:
 
 Optional extension:
 
-- OpenRouter image-capable model integration.
+- OpenRouter, OpenAI, or Google Gemini image-capable model integration.
 - `src/image_generator.py`.
 - `outputs/images/` for generated images.
 - Image displayed in Gradio only when generation succeeds.
@@ -57,7 +57,7 @@ Hard boundary:
 
 - Image generation must be disabled by default.
 - Prompt-only mode must work even when API key, image model, quota, or provider response format is unavailable.
-- No separate OpenAI Image API key is required.
+- Image generation remains optional and can use any configured provider.
 - The system must not provide veterinary diagnosis.
 
 ## 4. High-level System Architecture
@@ -77,11 +77,13 @@ Rule-based risk checker
   ↓
 Prompt builders
   ↓
-LLM client / OpenRouter
+Provider router
+  ↓
+OpenRouter / OpenAI / Google Gemini
   ↓
 Care answer / diagnosis report / tank design prompt
   ↓
-Optional image generator / OpenRouter image model
+Optional image generator / provider router
   ↓
 UI outputs
 ```
@@ -94,8 +96,8 @@ Primary module flow:
 - `src/risk_checker.py` produces deterministic risk results.
 - `src/report_generator.py` builds Q&A and diagnosis prompts and calls the LLM client.
 - `src/prompt_generator.py` builds tank design prompt outputs.
-- `src/image_generator.py` optionally calls OpenRouter image generation and saves images.
-- `src/llm_client.py` handles OpenRouter-compatible text generation and mock fallback.
+- `src/image_generator.py` optionally calls configured image providers and saves images.
+- `src/llm_client.py` handles text provider fallback and mock fallback.
 - `src/config.py` centralizes paths, environment variables, and default settings.
 
 ## 5. Frontend / Backend Integration Model
@@ -288,12 +290,19 @@ generate_tank_image(prompt: str) -> tuple[str | None, str]
 
 ## 7. Environment Variables
 
-Required text backend variables:
+Provider fallback variables:
 
 ```env
+TEXT_PROVIDER_ORDER=openrouter,openai,google
+IMAGE_PROVIDER_ORDER=openrouter,openai,google,stability
+PROVIDER_TIMEOUT_SECONDS=45
+OPENROUTER_API_KEY=
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_TEXT_MODEL=openai/gpt-4o-mini
 OPENAI_API_KEY=
-OPENAI_BASE_URL=https://openrouter.ai/api/v1
-OPENAI_MODEL=openai/gpt-4o-mini
+OPENAI_TEXT_MODEL=gpt-4o-mini
+GEMINI_API_KEY=
+GOOGLE_TEXT_MODEL=gemini-3.5-flash
 ```
 
 Optional image generation variables:
@@ -302,13 +311,21 @@ Optional image generation variables:
 IMAGE_GENERATION_ENABLED=false
 OPENROUTER_IMAGE_MODEL=
 OPENROUTER_IMAGE_SIZE=1024x1024
+OPENAI_IMAGE_MODEL=gpt-image-1
+OPENAI_IMAGE_SIZE=1024x1024
+GOOGLE_IMAGE_MODEL=gemini-3.1-flash-image
+GOOGLE_IMAGE_ASPECT_RATIO=1:1
+STABILITY_API_KEY=
+STABILITY_IMAGE_ENDPOINT=https://api.stability.ai/v2beta/stable-image/generate/sd3
+STABILITY_OUTPUT_FORMAT=jpeg
 ```
 
 Default behavior:
 
-- If `OPENAI_API_KEY` is empty, text generation uses mock mode.
+- If all provider API keys are empty, text generation uses mock mode.
+- Provider calls follow the configured order and try the next provider after recoverable failure.
 - If `IMAGE_GENERATION_ENABLED=false`, do not call image generation.
-- If image generation is enabled but image model or API key is missing, return prompt-only status.
+- If image generation is enabled but no provider has image model and API key configured, return prompt-only status.
 
 ## 8. Global Implementation Checklist
 
@@ -348,9 +365,13 @@ Default behavior:
 - [ ] Retrieved references show source filename and preview.
 - [ ] Mock mode works when API key is missing.
 - [ ] OpenRouter text generation works when API key is configured.
+- [ ] OpenAI text generation works when API key is configured.
+- [ ] Google Gemini text generation works when API key is configured.
+- [ ] Text provider fallback tries the next provider when one service fails.
 - [ ] `IMAGE_GENERATION_ENABLED=false` is the default.
 - [ ] Tank design tab works when image generation is disabled.
 - [ ] Optional image generation does not crash when model or API key is missing.
+- [ ] Image provider fallback tries the next provider when one service fails.
 - [ ] Generated image is saved under `outputs/images/` if image generation succeeds.
 - [ ] Image generation failure falls back to prompt-only output.
 - [ ] Health-related answers avoid veterinary diagnosis claims.

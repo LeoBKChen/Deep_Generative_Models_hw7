@@ -5,7 +5,7 @@
 - Codex Agent in the IDE.
 - PowerShell for local file inspection.
 - Python project scaffold generated through agent-assisted code editing.
-- OpenRouter-compatible API design for text generation and optional image generation.
+- Multi-provider API design for OpenRouter, OpenAI, and Google Gemini text/image generation.
 
 ## 2. Phase 1: Ideation and Planning
 
@@ -85,6 +85,10 @@ The DGM conda environment was verified with Python 3.11.15. Project dependencies
 
 During testing, the local `.env` file was corrected so `OPENAI_API_KEY=` is empty by default. This ensures stable mock mode unless the user intentionally adds a real OpenRouter API key.
 
+Later API planning expanded the backend from OpenRouter-only behavior into a provider fallback chain. The agent preserved OpenRouter support, added OpenAI and Google Gemini configuration, and kept mock/prompt-only behavior as the stable demo path.
+
+The image provider chain was later extended with Stability AI using the official SD3 multipart API shape supplied by the human. The implementation was added without a live API call to avoid consuming image generation credits.
+
 ## 6. Phase 5: UI Integration
 
 ### Prompt Used
@@ -134,6 +138,8 @@ The human requested README and workflow log drafts.
 - Missing API key: resolved through mock mode.
 - Image generation uncertainty: resolved by making it optional, disabled by default, and isolated in `src/image_generator.py`.
 - Provider response variability: handled with defensive base64 extraction and prompt-only fallback.
+- Provider outage or quota failure: handled with OpenRouter -> OpenAI -> Google fallback order for both text and optional image generation.
+- Additional image provider support: Stability AI can be added to `IMAGE_PROVIDER_ORDER` for image-only fallback.
 - Stable demo requirement: resolved by prioritizing prompt-only mode and screenshot submission.
 
 ## 9. Reflection on Agent Collaboration

@@ -5,7 +5,7 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.config import MOCK_MODE
+from src.config import IMAGE_GENERATION_ENABLED, MOCK_MODE
 from src.image_generator import DISABLED_STATUS, generate_tank_image
 from src.prompt_generator import generate_design_prompt
 from src.rag import retrieve
@@ -20,8 +20,8 @@ def assert_true(condition: bool, message: str) -> None:
 
 def main() -> None:
     print("Running TurtleCare AI smoke test...")
-
-    assert_true(MOCK_MODE is True, "Expected mock mode with the default local .env.")
+    print(f"MOCK_MODE={MOCK_MODE}")
+    print(f"IMAGE_GENERATION_ENABLED={IMAGE_GENERATION_ENABLED}")
 
     chunks = retrieve("Does my turtle need UVB light?", 3)
     assert_true(len(chunks) == 3, "RAG should return exactly 3 chunks.")
@@ -34,10 +34,14 @@ def main() -> None:
 
     qa_profile = build_qa_profile("Red-eared slider", 8)
     qa = answer_question(qa_profile, "Does it need UVB?")
-    assert_true("Mock TurtleCare AI answer" in qa["answer"], "Q&A mock answer was not returned.")
+    assert_true(bool(qa["answer"].strip()), "Q&A answer should not be empty.")
+    if MOCK_MODE:
+        assert_true("Mock TurtleCare AI answer" in qa["answer"], "Q&A mock answer was not returned.")
     assert_true(len(qa["references"]) == 3, "Q&A should include 3 references.")
     qa_zh = answer_question(qa_profile, "我的烏龜需要 UVB 嗎？")
-    assert_true("根據本地知識庫" in qa_zh["answer"], "Chinese Q&A mock answer should use Chinese.")
+    assert_true(bool(qa_zh["answer"].strip()), "Chinese Q&A answer should not be empty.")
+    if MOCK_MODE:
+        assert_true("根據本地知識庫" in qa_zh["answer"], "Chinese Q&A mock answer should use Chinese.")
 
     diagnosis_profile = build_diagnosis_profile(
         "Red-eared slider",
@@ -56,6 +60,7 @@ def main() -> None:
         "recently not eating",
     )
     diagnosis = generate_diagnosis_report(diagnosis_profile)
+    assert_true(bool(diagnosis["report"].strip()), "Diagnosis report should not be empty.")
     assert_true("Basking Area" in diagnosis["risk_summary"], "Diagnosis should flag missing basking area.")
     assert_true("UVB Lighting" in diagnosis["risk_summary"], "Diagnosis should flag missing UVB light.")
 
@@ -71,12 +76,17 @@ def main() -> None:
         False,
     )
     design = generate_design_prompt(design_profile)
-    assert_true("turtle tank" in design["image_prompt"].lower(), "Design prompt should describe a turtle tank.")
+    assert_true(bool(design["image_prompt"].strip()), "Design prompt should not be empty.")
     assert_true(len(design["references"]) == 3, "Design prompt should include 3 references.")
 
     image_path, image_status = generate_tank_image(design["image_prompt"])
-    assert_true(image_path is None, "Image path should be None when image generation is disabled.")
-    assert_true(image_status == DISABLED_STATUS, "Disabled image generation status mismatch.")
+    assert_true(bool(image_status.strip()), "Image generation status should not be empty.")
+    if IMAGE_GENERATION_ENABLED:
+        if image_path is not None:
+            assert_true(Path(image_path).exists(), "Generated image path should exist.")
+    else:
+        assert_true(image_path is None, "Image path should be None when image generation is disabled.")
+        assert_true(image_status == DISABLED_STATUS, "Disabled image generation status mismatch.")
 
     print("Smoke test passed.")
 

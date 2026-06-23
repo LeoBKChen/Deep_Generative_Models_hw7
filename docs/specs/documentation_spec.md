@@ -96,7 +96,7 @@ Workflow log required sections:
 - [ ] Include local installation steps.
 - [ ] Include `.env.example` explanation.
 - [ ] Explain mock mode.
-- [ ] Explain optional OpenRouter image generation.
+- [ ] Explain multi-provider text and image fallback.
 - [ ] Write English workflow log.
 - [ ] Record key prompts and agent outputs.
 - [ ] Record technical bottlenecks and fixes.
@@ -105,7 +105,7 @@ Workflow log required sections:
 ## Completion Checklist
 
 - [ ] README can guide a new user to run the App.
-- [ ] README explains OpenRouter text backend.
+- [ ] README explains OpenRouter, OpenAI, and Google Gemini provider fallback.
 - [ ] README explains image generation is optional and disabled by default.
 - [ ] workflow log clearly documents Agent-driven workflow.
 - [ ] workflow log includes human decisions.

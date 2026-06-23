@@ -52,7 +52,7 @@ Recommended demo scenarios:
 - Q&A tab with a water depth or UVB question.
 - Diagnosis tab with missing basking area or missing UVB.
 - Tank design tab showing prompt-only output.
-- Optional image output only if OpenRouter image model is configured and reliable.
+- Optional image output only if at least one image provider is configured and reliable.
 
 ## Error / Fallback Behavior
 

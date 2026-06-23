@@ -4,14 +4,14 @@
 
 TurtleCare AI is a RAG-based turtle keeping and tank design assistant for the Deep Generative Models final assignment. It helps users ask turtle care questions, evaluate tank conditions, identify husbandry risks, and generate diffusion-ready turtle tank design prompts.
 
-The app uses a local Markdown knowledge base, TF-IDF retrieval, rule-based risk checking, and an OpenRouter / OpenAI-compatible LLM client. It also includes an optional OpenRouter image generation module, disabled by default so the MVP remains stable in prompt-only mode.
+The app uses a local Markdown knowledge base, TF-IDF retrieval, rule-based risk checking, and a multi-provider LLM client with OpenRouter, OpenAI, and Google Gemini fallback. It also includes optional multi-provider image generation, disabled by default so the MVP remains stable in prompt-only mode.
 
 ## Features
 
 - Turtle Care Q&A with retrieved references.
 - Tank Environment Diagnosis with deterministic risk checking.
 - Tank Design Prompt Generator with English image prompt, negative prompt, materials, and safety notes.
-- Optional OpenRouter image generation.
+- Optional OpenRouter, OpenAI, Google Gemini, or Stability AI image generation.
 - Mock mode when no API key is configured.
 - Traditional Chinese Gradio UI.
 
@@ -20,7 +20,9 @@ The app uses a local Markdown knowledge base, TF-IDF retrieval, rule-based risk 
 - Python 3.11
 - Gradio
 - scikit-learn TF-IDF retrieval
-- OpenAI Python SDK for OpenRouter-compatible APIs
+- OpenAI Python SDK for OpenRouter-compatible and OpenAI APIs
+- Google Gen AI SDK for Gemini APIs
+- requests for Stability AI image generation
 - python-dotenv
 - Local Markdown knowledge base
 
@@ -74,18 +76,39 @@ pip install -r requirements.txt
 Copy `.env.example` to `.env` and fill values if needed.
 
 ```env
+TEXT_PROVIDER_ORDER=openrouter,openai,google
+IMAGE_PROVIDER_ORDER=openrouter,openai,google,stability
+PROVIDER_TIMEOUT_SECONDS=45
+
+OPENROUTER_API_KEY=
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_TEXT_MODEL=openai/gpt-4o-mini
+OPENROUTER_IMAGE_MODEL=
+OPENROUTER_IMAGE_SIZE=1024x1024
+
 OPENAI_API_KEY=
-OPENAI_BASE_URL=https://openrouter.ai/api/v1
-OPENAI_MODEL=openai/gpt-4o-mini
+OPENAI_TEXT_MODEL=gpt-4o-mini
+OPENAI_IMAGE_MODEL=gpt-image-1
+OPENAI_IMAGE_SIZE=1024x1024
+
+GEMINI_API_KEY=
+GOOGLE_TEXT_MODEL=gemini-3.5-flash
+GOOGLE_IMAGE_MODEL=gemini-3.1-flash-image
+GOOGLE_IMAGE_ASPECT_RATIO=1:1
+
+STABILITY_API_KEY=
+STABILITY_IMAGE_ENDPOINT=https://api.stability.ai/v2beta/stable-image/generate/sd3
+STABILITY_OUTPUT_FORMAT=jpeg
+
 LLM_TEMPERATURE=0.3
 RETRIEVAL_TOP_K=3
 
 IMAGE_GENERATION_ENABLED=false
-OPENROUTER_IMAGE_MODEL=
-OPENROUTER_IMAGE_SIZE=1024x1024
 ```
 
-If `OPENAI_API_KEY` is empty, the app runs in mock mode. This allows the full Gradio demo to work without external API access.
+If all provider API keys are empty, the app runs in mock mode. This allows the full Gradio demo to work without external API access.
+
+Legacy OpenRouter `.env` files using `OPENAI_API_KEY` with `OPENAI_BASE_URL=https://openrouter.ai/api/v1` remain compatible when `OPENROUTER_API_KEY` is not set, but new configuration should use `OPENROUTER_API_KEY`.
 
 ## How To Run
 
@@ -115,12 +138,24 @@ C:\miniconda3\envs\DGM\python.exe -m pip check
 
 The MVP always generates a diffusion-ready turtle tank design prompt. Image generation is optional and disabled by default.
 
-To enable image generation, configure an OpenRouter image-capable model:
+To enable image generation, configure at least one image-capable provider:
 
 ```env
 IMAGE_GENERATION_ENABLED=true
+IMAGE_PROVIDER_ORDER=openrouter,openai,google,stability
+
 OPENROUTER_IMAGE_MODEL=your-openrouter-image-model
 OPENROUTER_IMAGE_SIZE=1024x1024
+
+OPENAI_IMAGE_MODEL=gpt-image-1
+OPENAI_IMAGE_SIZE=1024x1024
+
+GOOGLE_IMAGE_MODEL=gemini-3.1-flash-image
+GOOGLE_IMAGE_ASPECT_RATIO=1:1
+
+STABILITY_API_KEY=your-stability-api-key
+STABILITY_IMAGE_ENDPOINT=https://api.stability.ai/v2beta/stable-image/generate/sd3
+STABILITY_OUTPUT_FORMAT=jpeg
 ```
 
 If image generation is disabled, unsupported, misconfigured, or fails, the app keeps showing the generated prompt, negative prompt, materials, and safety notes.
@@ -159,7 +194,7 @@ This helper assumes the Gradio app is already running at `http://127.0.0.1:7860`
 - TurtleCare AI does not provide veterinary diagnosis.
 - The knowledge base is small and educational.
 - TF-IDF retrieval is simple and keyword-based.
-- Optional image generation depends on OpenRouter model availability, pricing, quota, and response format.
+- Optional image generation depends on provider model availability, pricing, quota, and response format.
 
 ## Agent-driven Development
 

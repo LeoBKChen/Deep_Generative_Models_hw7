@@ -2,15 +2,17 @@
 
 ## Purpose
 
-定義 `src/llm_client.py` 的 OpenRouter / OpenAI-compatible text generation client，並確保沒有 API key 時仍能用 mock response 完成 demo。
+定義 `src/llm_client.py` 的 multi-provider text generation client。此模組保留單一公開函式，內部依序嘗試 OpenRouter、OpenAI、Google Gemini，並確保沒有 API key 或所有 provider 失敗時仍能用 mock response 完成 demo。
 
 ## Responsibilities
 
 - Provide one simple text generation function.
-- Use OpenAI-compatible chat completions API.
-- Read settings from `src/config.py`.
-- Handle missing API key through mock mode.
-- Handle API errors gracefully.
+- Route text generation through configured provider order.
+- Support OpenRouter with OpenAI-compatible chat completions.
+- Support OpenAI with the Responses API.
+- Support Google Gemini through `google-genai`.
+- Handle missing API keys through mock mode.
+- Handle provider failures gracefully and try the next provider.
 - Never expose API keys.
 
 ## Inputs
@@ -34,11 +36,17 @@ generate_text(system_prompt: str, user_prompt: str) -> str
 
 ## Data Format
 
-OpenAI-compatible request shape:
+Provider order:
+
+```python
+TEXT_PROVIDER_ORDER = ["openrouter", "openai", "google"]
+```
+
+OpenRouter request shape:
 
 ```python
 client.chat.completions.create(
-    model=OPENAI_MODEL,
+    model=OPENROUTER_TEXT_MODEL,
     messages=[
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
@@ -47,11 +55,33 @@ client.chat.completions.create(
 )
 ```
 
+OpenAI request shape:
+
+```python
+client.responses.create(
+    model=OPENAI_TEXT_MODEL,
+    instructions=system_prompt,
+    input=user_prompt,
+    temperature=LLM_TEMPERATURE,
+)
+```
+
+Google request shape:
+
+```python
+client.interactions.create(
+    model=GOOGLE_TEXT_MODEL,
+    input=f"{system_prompt}\n\nUser request:\n{user_prompt}",
+)
+```
+
 ## Error / Fallback Behavior
 
 - If `MOCK_MODE=True`, return a structured mock response.
-- If OpenRouter call fails, return a readable fallback message.
-- If response content is empty, return a clear message explaining no content was generated.
+- If a provider is unsupported, skip it and record the provider name.
+- If a provider is missing API key or model config, skip it and try the next provider.
+- If a provider call fails, catch the exception type and try the next provider.
+- If every provider fails, return a readable fallback message plus mock response.
 - Do not raise raw API errors to the UI.
 
 ## Safety Requirements
@@ -59,21 +89,28 @@ client.chat.completions.create(
 - Do not print API keys.
 - Do not include secrets in error messages.
 - System prompt must include no-veterinary-diagnosis safety behavior.
+- Provider failure summaries may include provider names and exception types only.
 
 ## Implementation Checklist
 
-- [ ] Import OpenAI client.
-- [ ] Read config values.
-- [ ] Implement `generate_text`.
-- [ ] Implement mock response helper.
-- [ ] Catch API exceptions.
-- [ ] Return readable fallback text on failure.
-- [ ] Keep function interface simple for other modules.
+- [x] Import OpenAI client.
+- [x] Read provider config values.
+- [x] Implement `generate_text`.
+- [x] Implement mock response helper.
+- [x] Implement OpenRouter text provider.
+- [x] Implement OpenAI text provider.
+- [x] Implement Google text provider.
+- [x] Catch provider exceptions and continue fallback chain.
+- [x] Return readable fallback text on total failure.
+- [x] Keep function interface simple for other modules.
 
 ## Completion Checklist
 
-- [ ] Mock mode works without API key.
+- [ ] Mock mode works without API keys.
 - [ ] Real OpenRouter call works when API key and model are configured.
+- [ ] Real OpenAI call works when API key and model are configured.
+- [ ] Real Google Gemini call works when API key and model are configured.
+- [ ] Provider fallback tries the next configured provider after failure.
 - [ ] API errors do not crash the App.
 - [ ] Returned text is always a string.
 - [ ] API key is never exposed.

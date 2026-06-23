@@ -15,6 +15,7 @@ Installed core packages:
 gradio==6.19.0
 gradio_client==2.5.0
 openai==2.43.0
+google-genai==2.9.0
 scikit-learn==1.9.0
 numpy==2.4.6
 python-dotenv==1.2.2
@@ -50,6 +51,10 @@ No broken requirements found.
 - [x] `src/report_generator.py`
 - [x] `src/prompt_generator.py`
 - [x] `src/image_generator.py`
+- [x] Multi-provider text fallback settings and implementation
+- [x] Multi-provider image fallback settings and implementation
+- [x] Stability AI image provider support added without live API test
+- [x] `docs/specs/provider_failover_spec.md`
 - [x] `data/knowledge_base/*.md`
 - [x] `outputs/images/.gitkeep`
 - [x] `examples/sample_cases.md`
@@ -74,6 +79,8 @@ No broken requirements found.
 - [x] Diagnosis flow returns report, risk summary, and references.
 - [x] Tank design flow returns English prompt, negative prompt, materials, safety notes, status, and references.
 - [x] Image generation disabled fallback returns no image path and a user-facing status message.
+- [x] Text generation still supports mock mode when no provider key is configured.
+- [x] Optional image generation still supports prompt-only fallback when disabled.
 - [x] Gradio server starts and responds at `http://127.0.0.1:7860`.
 - [x] Gradio API endpoints `/handle_qa`, `/handle_diagnosis`, and `/handle_design` have been called successfully.
 
@@ -83,7 +90,10 @@ No broken requirements found.
 - [x] Capture demo screenshot as `314831018_HW7.png`.
 - [x] Demo screenshot includes a Chinese Q&A input, generated Chinese mock answer, and retrieved references.
 - [ ] Optionally configure a real OpenRouter API key in `.env` for real LLM testing.
-- [ ] Optionally configure `IMAGE_GENERATION_ENABLED=true` and `OPENROUTER_IMAGE_MODEL` for real image generation testing.
+- [ ] Optionally configure a real OpenAI API key in `.env` for real LLM/image testing.
+- [ ] Optionally configure a real Gemini API key in `.env` for real LLM/image testing.
+- [ ] Optionally configure a real Stability AI API key in `.env` for real image testing.
+- [ ] Optionally configure `IMAGE_GENERATION_ENABLED=true` and at least one image provider model for real image generation testing.
 - [ ] Review README and workflow log before final submission.
 
 ## Recommended Next Commands
