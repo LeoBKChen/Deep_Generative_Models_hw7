@@ -2,65 +2,68 @@
 
 ## 1. Tools Used
 
-- Codex Agent in the IDE.
-- PowerShell for local file inspection.
-- Python project scaffold generated through agent-assisted code editing.
-- Multi-provider API design for OpenRouter, OpenAI, and Google Gemini text/image generation.
+- Codex Agent in the IDE for planning, code generation, debugging, and documentation.
+- PowerShell for local inspection and validation commands.
+- Python 3.11 in the `DGM` conda environment.
+- Gradio for the interactive UI.
+- OpenAI Python SDK for OpenRouter-compatible and OpenAI APIs.
+- Google Gen AI SDK for Gemini APIs.
+- requests for Stability AI image generation.
+- Playwright as a development-only screenshot helper.
 
-## 2. Phase 1: Ideation and Planning
+## 2. Phase 1: Ideation And Planning
 
-### Prompt Used
+### Human Prompt
 
-The human asked the agent to read the homework requirements and plan a generative AI app using an agent-driven workflow.
+The human asked the agent to read the homework requirements and propose a generative AI application that demonstrates an agent-driven workflow.
 
-### Agent Output Summary
+### Agent Output
 
-The agent proposed TurtleCare AI, a RAG-based turtle keeping and tank design assistant that combines LLM generation, local Markdown retrieval, rule-based risk checking, and diffusion-ready tank design prompts.
-
-### Human Decision
-
-The human accepted TurtleCare AI as the project topic.
-
-## 3. Phase 2: Architecture Design and Task Decomposition
-
-### Prompt Used
-
-The human asked the agent to read `docs/agent.md`, explain the project direction, and create architecture and module specification documents.
-
-### Agent Output Summary
-
-The agent created `docs/architecture.md` and module specs under `docs/specs/`, covering UI, config, RAG, LLM client, turtle profile, risk checker, report generation, prompt generation, optional image generation, knowledge base, documentation, and demo submission.
+The agent proposed TurtleCare AI: a turtle care, tank diagnosis, and tank design assistant combining LLM generation, local RAG, deterministic risk checks, and image-generation prompt engineering.
 
 ### Human Decision
 
-The human chose Python 3.11, Student ID `314831018`, screenshot demo submission, and asked to implement optional image generation while keeping it disabled by default.
+The human accepted TurtleCare AI as the project topic and continued the project around a Gradio-based interactive app.
 
-## 4. Phase 3: Knowledge Base Construction
+## 3. Phase 2: Architecture Design And Task Decomposition
 
-### Prompt Used
+### Human Prompt
 
-The human asked the agent to begin implementation based on the architecture plan and `agent.md`.
+The human asked the agent to read `docs/agent.md`, explain the project direction, and determine whether the architecture design and task decomposition requirement had been completed.
 
-### Generated Files
+### Agent Output
 
-- `data/knowledge_base/turtle_species.md`
-- `data/knowledge_base/tank_setup.md`
-- `data/knowledge_base/water_quality.md`
-- `data/knowledge_base/lighting_and_basking.md`
-- `data/knowledge_base/feeding.md`
-- `data/knowledge_base/common_health_issues.md`
-- `data/knowledge_base/mixed_species_warning.md`
-- `data/knowledge_base/emergency_warning.md`
+The agent identified that the project still needed an implementation-ready architecture checklist and module-level specs.
 
-### Human Review Notes
+### Generated Documentation
 
-Pending final human review.
+- `docs/architecture.md`
+- `docs/specs/app_ui_spec.md`
+- `docs/specs/config_spec.md`
+- `docs/specs/rag_spec.md`
+- `docs/specs/llm_client_spec.md`
+- `docs/specs/turtle_profile_spec.md`
+- `docs/specs/risk_checker_spec.md`
+- `docs/specs/report_generator_spec.md`
+- `docs/specs/prompt_generator_spec.md`
+- `docs/specs/image_generator_spec.md`
+- `docs/specs/knowledge_base_spec.md`
+- `docs/specs/documentation_spec.md`
+- `docs/specs/demo_submission_spec.md`
 
-## 5. Phase 4: Code Generation and Implementation
+### Human Decisions
 
-### Prompt Used
+- Use Python 3.11.
+- Use Student ID `314831018`.
+- Submit a screenshot demo.
+- Keep image generation optional.
+- Keep prompt-only mode reliable for demonstration.
 
-The human asked the agent to prepare `requirements.txt`, `.env`, image generation, README, workflow log, and start development.
+## 4. Phase 3: Code Generation And Implementation
+
+### Human Prompt
+
+The human asked the agent to create `requirements.txt`, `.env`, image generation support, README, workflow log, and begin project implementation.
 
 ### Generated Components
 
@@ -73,75 +76,203 @@ The human asked the agent to prepare `requirements.txt`, `.env`, image generatio
 - `src/report_generator.py`
 - `src/prompt_generator.py`
 - `src/image_generator.py`
-- `.env.example`
-- `.env`
-- `requirements.txt`
-
-### Debugging Records
-
-Initial implementation is designed to run in mock mode without an API key. Optional image generation is implemented defensively and disabled by default.
-
-The DGM conda environment was verified with Python 3.11.15. Project dependencies were installed with pip through the DGM environment. Because the default `python` command pointed to the Windows Store stub, later commands used `C:\miniconda3\envs\DGM\python.exe` directly.
-
-During testing, the local `.env` file was corrected so `OPENAI_API_KEY=` is empty by default. This ensures stable mock mode unless the user intentionally adds a real OpenRouter API key.
-
-Later API planning expanded the backend from OpenRouter-only behavior into a provider fallback chain. The agent preserved OpenRouter support, added OpenAI and Google Gemini configuration, and kept mock/prompt-only behavior as the stable demo path.
-
-The image provider chain was later extended with Stability AI using the official SD3 multipart API shape supplied by the human. The implementation was added without a live API call to avoid consuming image generation credits.
-
-## 6. Phase 5: UI Integration
-
-### Prompt Used
-
-The human requested a runnable MVP with Traditional Chinese UI labels.
-
-### Generated Components
-
-The agent created a Gradio UI with three tabs:
-
-- Turtle care Q&A.
-- Tank environment diagnosis.
-- Tank design and optional image generation.
-
-### Validation Records
-
-- `python -m compileall app.py src` passed in the DGM environment.
-- Backend smoke tests confirmed mock mode, RAG top-k retrieval, Q&A output, diagnosis risk summary, design prompt output, and disabled image generation fallback.
-- Gradio server responded at `http://127.0.0.1:7860` with HTTP 200.
-- Gradio API endpoints `/handle_qa`, `/handle_diagnosis`, and `/handle_design` were called successfully through `gradio_client`.
-- `pip check` reported no broken requirements in the DGM environment.
-- A screenshot helper was added to capture `314831018_HW7.png` from the running Gradio UI.
-- Playwright was installed as a development-only helper and recorded in `requirements-dev.txt`.
-- Chinese keyword expansion was added to improve retrieval from the English Markdown knowledge base when users ask questions in Traditional Chinese.
-- Mock responses were adjusted to follow Chinese input for the local no-API-key demo.
-- `314831018_HW7.txt` was filled with the project GitHub repository link.
-
-## 7. Phase 6: Documentation and Finalization
-
-### Prompt Used
-
-The human requested README and workflow log drafts.
-
-### Generated Files
-
-- `README.md`
-- `workflow_log.md`
-- `examples/sample_cases.md`
-- `314831018_HW7.txt`
 - `scripts/smoke_test.py`
 - `scripts/capture_demo_screenshot.py`
-- `docs/development_status.md`
+- `requirements.txt`
 - `requirements-dev.txt`
+- `.env.example`
+- `examples/sample_cases.md`
+- `data/knowledge_base/*.md`
+- `outputs/images/.gitkeep`
 
-## 8. Technical Bottlenecks and Resolutions
+### Implementation Summary
 
-- Missing API key: resolved through mock mode.
-- Image generation uncertainty: resolved by making it optional, disabled by default, and isolated in `src/image_generator.py`.
-- Provider response variability: handled with defensive base64 extraction and prompt-only fallback.
-- Provider outage or quota failure: handled with OpenRouter -> OpenAI -> Google fallback order for both text and optional image generation.
-- Additional image provider support: Stability AI can be added to `IMAGE_PROVIDER_ORDER` for image-only fallback.
-- Stable demo requirement: resolved by prioritizing prompt-only mode and screenshot submission.
+The agent implemented a three-tab Gradio app:
 
-## 9. Reflection on Agent Collaboration
+- Turtle Care Q&A.
+- Tank Environment Diagnosis.
+- Tank Design Prompt Generator.
 
-The agent helped convert assignment requirements into a concrete project, split the system into modules, create implementation specs, scaffold the codebase, and prepare documentation. The human guided major project decisions, including Python version, Student ID, screenshot demo format, and optional image generation strategy.
+The backend uses local Markdown RAG, TF-IDF retrieval, turtle profile normalization, deterministic risk checking, LLM prompt construction, and optional image generation.
+
+## 5. Phase 4: Knowledge Base And RAG
+
+### Human Prompt
+
+The human asked whether the RAG database was complete and what its sources were.
+
+### Agent Output
+
+The agent verified that the MVP RAG database was complete with eight local Markdown files under `data/knowledge_base/`.
+
+### Knowledge Base Files
+
+- `turtle_species.md`
+- `tank_setup.md`
+- `water_quality.md`
+- `lighting_and_basking.md`
+- `feeding.md`
+- `common_health_issues.md`
+- `mixed_species_warning.md`
+- `emergency_warning.md`
+
+### Source Clarification
+
+The knowledge base is a local curated educational knowledge base generated for the assignment from project requirements, beginner turtle care topics, and safety rules. It is not a citation-based veterinary database.
+
+## 6. Phase 5: API Provider Evolution
+
+### Initial Design
+
+The first implementation used OpenRouter-compatible text generation and optional OpenRouter image generation.
+
+### Human Prompt
+
+The human requested keeping OpenRouter while adding OpenAI and Google AI API support so the app could try another service if one provider failed.
+
+### Agent Output
+
+The agent implemented a provider fallback architecture:
+
+- Text fallback order: `openrouter,openai,google`.
+- Image fallback order: `openrouter,openai,google`.
+- Existing public functions remained unchanged:
+  - `generate_text(system_prompt, user_prompt) -> str`
+  - `generate_tank_image(prompt) -> tuple[str | None, str]`
+
+### Later Extension
+
+The human provided official Stability AI SD3 sample code and requested adding Stability AI without testing the live API to avoid consuming quota.
+
+The agent added Stability AI as an image-only provider:
+
+- `STABILITY_API_KEY`
+- `STABILITY_IMAGE_ENDPOINT`
+- `STABILITY_OUTPUT_FORMAT`
+- `IMAGE_PROVIDER_ORDER=stability,openrouter,openai,google`
+
+The Stability implementation was validated with a local monkeypatch mock only, not a real API call.
+
+## 7. Phase 6: Debugging Records
+
+### Environment Debugging
+
+Problem:
+
+The default `python` command pointed to a Windows Store stub or the wrong interpreter.
+
+Resolution:
+
+The agent verified the `DGM` conda environment and used:
+
+```powershell
+C:\miniconda3\envs\DGM\python.exe
+```
+
+### Mock Mode Debugging
+
+Problem:
+
+The original smoke test expected `MOCK_MODE=True`, but after the human filled `.env` with real API keys, the test failed.
+
+Resolution:
+
+The smoke test was updated to support both mock mode and real API mode. It now checks non-empty outputs when real providers are configured and keeps mock-specific assertions only when `MOCK_MODE=True`.
+
+### RAG Debugging
+
+Problem:
+
+Chinese UI questions retrieved less relevant English knowledge-base chunks.
+
+Resolution:
+
+The agent added Chinese keyword expansion in `src/rag.py`, mapping terms such as `曬台`, `水質`, `混養`, and `UVB` to English retrieval keywords.
+
+### Image Provider Debugging
+
+Problem:
+
+Image generation failed across OpenRouter, OpenAI, and Google.
+
+Observed provider responses:
+
+- OpenRouter: insufficient credits.
+- OpenAI: billing hard limit reached.
+- Google: invalid `image/png` response format, later quota limitation.
+
+Resolution:
+
+- OpenRouter image generation was updated to use the dedicated `/api/v1/images` endpoint.
+- Google image generation was updated to use `image/jpeg`.
+- Prompt-only fallback remained the stable demo path.
+- Stability AI was added as an additional optional image provider.
+
+### Encoding Debugging
+
+Problem:
+
+Some earlier Chinese fallback/status strings displayed as mojibake in PowerShell.
+
+Resolution:
+
+The agent replaced broken strings with clean UTF-8 Traditional Chinese status messages in the runtime modules.
+
+## 8. Phase 7: UI Integration And Demo Preparation
+
+### Generated UI
+
+The agent created a Gradio app with Traditional Chinese labels and three tabs:
+
+- `烏龜照護問答`
+- `龜缸環境診斷`
+- `龜缸設計與圖片生成`
+
+### Demo Files
+
+- `314831018_HW7.txt`
+- `314831018_HW7.png`
+
+### Screenshot Helper
+
+The agent added `scripts/capture_demo_screenshot.py` and `requirements-dev.txt` for optional screenshot automation.
+
+## 9. Validation Summary
+
+Validation commands used during development:
+
+```powershell
+C:\miniconda3\envs\DGM\python.exe -m compileall app.py src scripts
+C:\miniconda3\envs\DGM\python.exe scripts\smoke_test.py
+C:\miniconda3\envs\DGM\python.exe -m pip check
+```
+
+Validated behavior:
+
+- Python syntax compile checks passed.
+- Smoke test passed in mock mode and later real-provider mode.
+- RAG retrieves top 3 chunks.
+- Chinese keyword expansion improves retrieval.
+- Q&A, diagnosis, and design prompt flows return outputs.
+- Image generation disabled fallback works.
+- Multi-provider fallback handles provider errors without crashing the app.
+- Stability AI provider was validated with a local mock, not a live API call.
+
+## 10. Technical Bottlenecks And Resolutions
+
+| Bottleneck | Resolution |
+| --- | --- |
+| Wrong Python interpreter | Use explicit DGM interpreter path |
+| Missing API keys | Implement mock mode |
+| Provider quota and billing failures | Keep prompt-only fallback and provider failover |
+| Provider-specific image formats | Normalize image extraction and save provider-specific output formats |
+| Google image format rejection | Use `image/jpeg` for Gemini image generation |
+| OpenRouter image endpoint mismatch | Use `/api/v1/images` for image generation |
+| Chinese query retrieval weakness | Add Chinese-to-English keyword expansion |
+| API testing cost concern | Use local mocks for Stability AI provider validation |
+
+## 11. Reflection On Agent Collaboration
+
+The agent helped convert the homework requirements into a concrete application, design the architecture, break the work into module specs, scaffold the codebase, implement the Gradio UI, add provider fallback logic, debug environment and API issues, and prepare final documentation.
+
+The human guided the major product and engineering decisions, including project topic, Python version, Student ID, screenshot demo format, API provider preferences, and the decision not to live-test Stability AI to avoid consuming image generation credits.

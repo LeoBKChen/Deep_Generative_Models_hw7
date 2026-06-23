@@ -2,18 +2,50 @@
 
 ## Overview
 
-TurtleCare AI is a RAG-based turtle keeping and tank design assistant for the Deep Generative Models final assignment. It helps users ask turtle care questions, evaluate tank conditions, identify husbandry risks, and generate diffusion-ready turtle tank design prompts.
+TurtleCare AI is an agent-developed generative AI application for the Deep Generative Models final assignment. It is a RAG-based turtle care and tank design assistant that helps users ask husbandry questions, evaluate turtle tank conditions, identify deterministic care risks, and generate diffusion-ready turtle tank design prompts.
 
-The app uses a local Markdown knowledge base, TF-IDF retrieval, rule-based risk checking, and a multi-provider LLM client with OpenRouter, OpenAI, and Google Gemini fallback. It also includes optional multi-provider image generation, disabled by default so the MVP remains stable in prompt-only mode.
+The project combines:
+
+- Large Language Models through API-based text generation.
+- RAG with a local Markdown turtle care knowledge base.
+- Rule-based safety and risk checking.
+- Prompt engineering for image generation.
+- Optional image generation through multiple providers.
+- A Traditional Chinese Gradio user interface.
+
+TurtleCare AI is an educational assistant. It does not provide veterinary diagnosis. Severe, persistent, or rapidly worsening symptoms should be handled by a qualified reptile veterinarian.
+
+## System Architecture
+
+```text
+User
+  -> Gradio UI
+  -> Turtle profile builder
+  -> TF-IDF RAG retriever
+  -> Rule-based risk checker
+  -> Report / prompt builders
+  -> Text provider router
+  -> OpenRouter / OpenAI / Google Gemini
+  -> UI text outputs
+
+Tank design prompt
+  -> Optional image provider router
+  -> OpenRouter / OpenAI / Google Gemini / Stability AI
+  -> outputs/images/
+```
+
+The frontend and backend are integrated directly through Gradio event handlers. There is no separate web API server. The app calls Python backend functions directly and displays generated answers, diagnosis reports, prompt sections, retrieved references, risk summaries, image status messages, and optional generated image paths.
 
 ## Features
 
-- Turtle Care Q&A with retrieved references.
+- Turtle Care Q&A with retrieved knowledge references.
 - Tank Environment Diagnosis with deterministic risk checking.
 - Tank Design Prompt Generator with English image prompt, negative prompt, materials, and safety notes.
-- Optional OpenRouter, OpenAI, Google Gemini, or Stability AI image generation.
-- Mock mode when no API key is configured.
-- Traditional Chinese Gradio UI.
+- Multi-provider text fallback: OpenRouter -> OpenAI -> Google Gemini.
+- Optional multi-provider image fallback: OpenRouter -> OpenAI -> Google Gemini -> Stability AI.
+- Mock mode when no text API key is configured.
+- Prompt-only image design mode for stable demonstrations.
+- Traditional Chinese UI labels.
 
 ## Technology Stack
 
@@ -32,48 +64,47 @@ The app uses a local Markdown knowledge base, TF-IDF retrieval, rule-based risk 
 .
 ├── app.py
 ├── requirements.txt
+├── requirements-dev.txt
 ├── .env.example
+├── 314831018_HW7.txt
+├── 314831018_HW7.png
 ├── data/knowledge_base/
 ├── docs/
+│   ├── architecture.md
+│   ├── debugging_process.md
+│   ├── development_status.md
+│   └── specs/
 ├── examples/
 ├── outputs/images/
+├── scripts/
 └── src/
 ```
 
 ## Installation
 
-Recommended conda setup for this project:
+Recommended setup with the existing conda environment:
 
 ```powershell
+cd "C:\Users\邦亢\Desktop\BK\NYCU\Deep Generative Models\Deep_Generative_Models_hw7"
 conda activate DGM
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-If `conda` is not initialized in PowerShell, use the environment Python directly:
+If PowerShell does not resolve the correct `python`, use the DGM interpreter directly:
 
 ```powershell
 C:\miniconda3\envs\DGM\python.exe -m pip install -r requirements.txt
 ```
 
-Alternative virtualenv setup:
+Optional screenshot helper dependencies:
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-On macOS or Linux:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+```powershell
+C:\miniconda3\envs\DGM\python.exe -m pip install -r requirements-dev.txt
 ```
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill values if needed.
+Copy `.env.example` to `.env` and fill only the providers you want to use.
 
 ```env
 TEXT_PROVIDER_ORDER=openrouter,openai,google
@@ -102,92 +133,103 @@ STABILITY_OUTPUT_FORMAT=jpeg
 
 LLM_TEMPERATURE=0.3
 RETRIEVAL_TOP_K=3
-
 IMAGE_GENERATION_ENABLED=false
 ```
 
-If all provider API keys are empty, the app runs in mock mode. This allows the full Gradio demo to work without external API access.
-
-Legacy OpenRouter `.env` files using `OPENAI_API_KEY` with `OPENAI_BASE_URL=https://openrouter.ai/api/v1` remain compatible when `OPENROUTER_API_KEY` is not set, but new configuration should use `OPENROUTER_API_KEY`.
+If all text provider API keys are empty, the app runs in mock mode. Legacy OpenRouter `.env` files using `OPENAI_API_KEY` with `OPENAI_BASE_URL=https://openrouter.ai/api/v1` remain compatible when `OPENROUTER_API_KEY` is not set, but new configuration should use `OPENROUTER_API_KEY`.
 
 ## How To Run
+
+Start the Gradio app:
 
 ```powershell
 C:\miniconda3\envs\DGM\python.exe app.py
 ```
 
-Open the local Gradio URL shown in the terminal.
+Open the local URL shown in the terminal. The verified local URL during development was:
 
-## Smoke Test
+```text
+http://127.0.0.1:7860
+```
 
-Run the backend smoke test before recording the demo screenshot:
+## Validation
+
+Run the backend smoke test:
 
 ```powershell
 C:\miniconda3\envs\DGM\python.exe scripts\smoke_test.py
 ```
 
-The test checks mock mode, RAG retrieval, Q&A generation, diagnosis risks, design prompt generation, and disabled image-generation fallback.
-
-Optional dependency check:
+Run dependency health check:
 
 ```powershell
 C:\miniconda3\envs\DGM\python.exe -m pip check
 ```
 
+Run syntax compilation check:
+
+```powershell
+C:\miniconda3\envs\DGM\python.exe -m compileall app.py src scripts
+```
+
+The smoke test supports both mock mode and real API mode. If image generation is enabled, it may call configured external image providers and consume provider quota.
+
 ## Optional Image Generation
 
 The MVP always generates a diffusion-ready turtle tank design prompt. Image generation is optional and disabled by default.
 
-To enable image generation, configure at least one image-capable provider:
+To enable image generation, configure at least one image provider:
 
 ```env
 IMAGE_GENERATION_ENABLED=true
-IMAGE_PROVIDER_ORDER=openrouter,openai,google,stability
-
-OPENROUTER_IMAGE_MODEL=your-openrouter-image-model
-OPENROUTER_IMAGE_SIZE=1024x1024
-
-OPENAI_IMAGE_MODEL=gpt-image-1
-OPENAI_IMAGE_SIZE=1024x1024
-
-GOOGLE_IMAGE_MODEL=gemini-3.1-flash-image
-GOOGLE_IMAGE_ASPECT_RATIO=1:1
+IMAGE_PROVIDER_ORDER=stability,openrouter,openai,google
 
 STABILITY_API_KEY=your-stability-api-key
 STABILITY_IMAGE_ENDPOINT=https://api.stability.ai/v2beta/stable-image/generate/sd3
 STABILITY_OUTPUT_FORMAT=jpeg
 ```
 
-If image generation is disabled, unsupported, misconfigured, or fails, the app keeps showing the generated prompt, negative prompt, materials, and safety notes.
+If image generation is disabled, unsupported, misconfigured, quota-limited, or fails, the app keeps showing the generated prompt, negative prompt, materials, and safety notes.
 
 Generated images are for visualization only. They are not engineering blueprints or veterinary recommendations.
 
-## Demo
+## RAG Knowledge Base
 
-The planned submission demo format is a screenshot named `314831018_HW7.png`.
-
-Recommended screenshot content:
-
-- Running Gradio UI.
-- At least one generated output from the Tank Design tab or Diagnosis tab.
-- Prompt-only mode is acceptable and expected for stable demo submission.
-
-Current verified local URL:
+The RAG knowledge base is located at:
 
 ```text
-http://127.0.0.1:7860
+data/knowledge_base/
 ```
 
-See `docs/development_status.md` for the current implementation and validation status.
+It contains eight curated Markdown files covering turtle species, tank setup, water quality, lighting, feeding, common health warnings, mixed-species housing, and emergency warnings. The retriever in `src/rag.py` loads these files, splits them by Markdown headings and paragraphs, builds a TF-IDF index, and returns the top 3 chunks with source filename, heading, preview, and score.
 
-Optional local screenshot helper:
+The current knowledge base is a local educational knowledge base created for this assignment. It is not a citation-based veterinary database.
 
-```powershell
-C:\miniconda3\envs\DGM\python.exe -m pip install -r requirements-dev.txt
-C:\miniconda3\envs\DGM\python.exe scripts\capture_demo_screenshot.py
+## Demo And Submission
+
+Submission files:
+
+```text
+314831018_HW7.txt
+314831018_HW7.png
 ```
 
-This helper assumes the Gradio app is already running at `http://127.0.0.1:7860`.
+- `314831018_HW7.txt` contains the repository or shared drive link.
+- `314831018_HW7.png` is the screenshot demonstration material.
+
+Prompt-only mode is acceptable for the screenshot demo because the core assignment requirements are satisfied by the interactive LLM/RAG app and image-generation prompt workflow. Optional real image generation depends on provider quota and billing status.
+
+## Agent-driven Development
+
+This project was developed with Codex Agent assistance. The agent helped with ideation, architecture design, task decomposition, code generation, debugging, UI integration, provider migration, and documentation.
+
+Detailed records:
+
+- `workflow_log.md`
+- `docs/architecture.md`
+- `docs/debugging_process.md`
+- `docs/development_status.md`
+- `docs/specs/`
 
 ## Limitations
 
@@ -195,7 +237,4 @@ This helper assumes the Gradio app is already running at `http://127.0.0.1:7860`
 - The knowledge base is small and educational.
 - TF-IDF retrieval is simple and keyword-based.
 - Optional image generation depends on provider model availability, pricing, quota, and response format.
-
-## Agent-driven Development
-
-This project is developed with Codex Agent assistance. The documentation includes planning files, architecture specs, module specs, implementation notes, and a workflow log to show the agent-driven process.
+- Real API behavior may change when providers update model names or endpoint requirements.
